@@ -5,10 +5,10 @@ import javax.swing.JPanel;
 public class Gravity extends Thread{
     
     public boolean loop = true;
-    public double FPS = 0, dID = 0, dToGo = 2, BGx = 250, BGy = 250, zoom = 1;
+    public double FPS = 0, dID = 1, dToGo = 2, BGx = 250, BGy = 250, zoom = 0.5;
     private long lastTime, t;
     public int reset = 0, FPSCount = 0, pMultiplier, GONum, cameraMode = -1;
-    private double slowDown = 4;
+    private final double slowDown = 1000;
     
     GravityObject[] GO;
     GravityObject[] pred;
@@ -31,14 +31,14 @@ public class Gravity extends Thread{
     
     private void reset(){
         if(GONum == 1){
-            pred = new GravityObject[300];
+            pred = new GravityObject[500];
             pMultiplier = 1;
         }else{
             pred = new GravityObject[100];
             pMultiplier = 3;
         }
-        for(int i = 1; i < pred.length; i++){
-            pred[i] = new GravityObject();
+        for(int i = 0; i < pred.length; i++){
+            pred[i] = new GravityObject(i+1, i * i / 200-750, 50-i/20, -i^2/200, 0);
         }
         pred[0] = new GravityObject(1, -750, 10, 0, 0);
         rocket = new Rocket();
@@ -90,14 +90,14 @@ public class Gravity extends Thread{
             for(GravityObject g: GO){
                 
                 //slow down time when near objects
-                double dist = slowDown * Math.sqrt((Math.pow(g.x-pred[0].x, 2) + 
-                        Math.pow(g.y-pred[0].y, 2)) / g.mass);
-                if(Math.abs(dID) > dist){
-                    if(dID > 0)
-                        dID = dist;
-                    else
-                        dID = -dist;
-                }
+                double slow = slowDown * Math.sqrt((Math.pow(g.x-pred[0].x, 2) + 
+                        Math.pow(g.y-pred[0].y, 2))) / g.mass;
+                if(dID > 0)
+                    while(dID > slow)
+                        dID -= 0.5;
+                else
+                    while(dID < slow)
+                        dID += 0.5;
             }
             
             //move GOs
@@ -108,8 +108,8 @@ public class Gravity extends Thread{
                 }
             }
             
-            pred[0].xs += getDTime() * 0.01 * rocket.throttle * Math.sin(rocket.getRotRad());
-            pred[0].ys -= getDTime() * 0.01 * rocket.throttle * Math.cos(rocket.getRotRad());
+            pred[0].xa += 0.1 * rocket.throttle * Math.sin(rocket.getRotRad());
+            pred[0].ya -= 0.1 * rocket.throttle * Math.cos(rocket.getRotRad());
             
             center();
             
@@ -119,7 +119,7 @@ public class Gravity extends Thread{
             t = System.nanoTime() - lastTime;
             
             if(FPSCount > 50){
-                FPS -= FPS/2;
+                FPS -= (int)FPS/2;
             }
             if(t/100000 > FPS){
                 FPS = t/100000;
@@ -139,66 +139,49 @@ public class Gravity extends Thread{
     
     
     public void predict(){
-        
-        for(int i = 0; i < pred.length; i++){
             double time = getDTime();
-            if(i > 0){
-                pred[i].lastx = pred[i-1].x;
-                pred[i].lasty = pred[i-1].y;
-                
-                pred[i].x = pred[i-1].x + pMultiplier * time * pred[i-1].xs;
-                pred[i].y = pred[i-1].y + pMultiplier * time * pred[i-1].ys;
-                
-                pred[i].x += pred[i-1].xa * time * time / 2;
-                pred[i].y += pred[i-1].ya * time * time / 2;
-                
-                pred[i].xs = pred[i-1].xs;
-                pred[i].ys = pred[i-1].ys;
-            }else{
-                
-                pred[i].lastx = pred[i].x;
-                pred[i].lasty = pred[i].y;
+        
+            pred[0].lastx = pred[0].x;
+            pred[0].lasty = pred[0].y;
 
-                pred[i].xs += pred[i].xa * time;
-                pred[i].ys += pred[i].ya * time;
-                
-                pred[i].x += pred[i].xs * time;
-                pred[i].y += pred[i].ys * time;
-            }
+            pred[0].move(time);
             
-            //'drop' predictions, all gravity objects
+            //'drop' predictions toward all gravity objects
             for(GravityObject g: GO){
-                int multiplier = pMultiplier;
-                if(i == 0)
-                    multiplier = 1;
-                fall(pred[i], g, multiplier);
+                fall(pred[0], g, 1);
+            }
+
+        for(int i = 1; i < pred.length; i++){
+            
+            pred[i].lastx = pred[i-1].x;
+            pred[i].lasty = pred[i-1].y;
+
+            pred[i].x = pred[i-1].x + pMultiplier * time * pred[i-1].xs;
+            pred[i].y = pred[i-1].y + pMultiplier * time * pred[i-1].ys;
+
+            pred[i].x += pred[i-1].xa * time * time / 2;
+            pred[i].y += pred[i-1].ya * time * time / 2;
+
+            pred[i].xs = pred[i-1].xs + pred[i-1].xa * time;
+            pred[i].ys = pred[i-1].ys + pred[i-1].ya * time;
+            
+            pred[i].xa = 0;
+            pred[i].ya = 0;
+            
+            //'drop' predictions toward all gravity objects
+            for(GravityObject g: GO){
+                fall(pred[i], g, pMultiplier);
             }
         }
     }
     
     private void fall(GravityObject g, GravityObject g2, int multiplier){
         double dx = g2.x - g.x, dy = g2.y - g.y;
-        double time = getDTime();
         double a = g2.mass / (Math.pow(dx, 2) + Math.pow(dy, 2));
         
-        double temp;
+        g.xa += multiplier * a * (double)(dx / (Math.abs(dx) + Math.abs(dy)));
+        g.ya += multiplier * a * (double)(dy / (Math.abs(dx) + Math.abs(dy)));
         
-        double J = (g2.mass / (Math.pow(g2.lastx - g.lastx, 2) + 
-                Math.pow(g2.lasty - g.lasty, 2)) - a) / time;
-        
-        //double JJ = ( - J) / time
-        
-        a += J * time /2;
-        
-        temp = multiplier * a;
-        
-        g.xa += temp * (double)(dx / (Math.abs(dx) + Math.abs(dy)));
-        g.ya += temp * (double)(dy / (Math.abs(dx) + Math.abs(dy)));
-        
-        temp = multiplier * J * time;
-        
-        g.xa += temp * (double)(dx / (Math.abs(dx) + Math.abs(dy)));
-        g.ya += temp * (double)(dy / (Math.abs(dx) + Math.abs(dy)));
     }
     
     private void center(){

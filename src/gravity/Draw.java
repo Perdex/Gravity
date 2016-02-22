@@ -1,5 +1,6 @@
 package gravity;
 
+import java.awt.BorderLayout;
 import javax.swing.*;
 import javax.swing.text.*;
 import java.awt.Color;
@@ -8,10 +9,11 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.AffineTransformOp;
 import java.awt.geom.AffineTransform;
+import java.awt.Font;
 
 public class Draw extends JPanel implements KeyListener{
     
-    boolean rPr, lPr, ePr, qPr, dotPr, commaPr, i = false;
+    boolean rPr, lPr, dotPr, commaPr;
     long t, lastTime;
     int framerate = 50, timeCount;
     double time;
@@ -19,17 +21,23 @@ public class Draw extends JPanel implements KeyListener{
     Gravity main;
     JTextPane info = new JTextPane();
     SimpleAttributeSet atSet;
-    String s = "controls: ship: A D W time: Q E " + 
-                "camera: C zoom: < > reset: 1-5 exit: esc";
+    String s = "\nControls:\nship: A D W\ntime: Q E\n" + 
+                "camera: C\nzoom: < >\nreset: 1-5\nexit: esc";
     
     public Draw(){
         main = new Gravity();
         addKeyListener(this);
         lastTime = System.currentTimeMillis();
         main.start();
-        this.add(info);
-        info.setBounds(getWidth()-120, 0, 120, 200);
+        
+        setOpaque(false);
+        setLayout(new BorderLayout());
+        
+        info.setEditable(false);
+        info.setFocusable(false);
         info.setForeground(Color.gray);
+        info.setOpaque(false);
+        add(info, BorderLayout.WEST);
     }
     
     @Override
@@ -40,6 +48,8 @@ public class Draw extends JPanel implements KeyListener{
         //clear
         g.setColor(Color.black);
         g.fillRect(0, 0, getWidth(), getHeight());
+        
+        
         if(main.BGy-500+getHeight()/2 > 0){
             g.drawImage(image.BG, (int)main.BGx+getWidth()/2, 
                     (int)main.BGy-1500+getHeight()/2, null);
@@ -57,17 +67,11 @@ public class Draw extends JPanel implements KeyListener{
         g.drawImage(image.BG, (int)main.BGx-1000+getWidth()/2, 
                 (int)main.BGy-500+getHeight()/2, null);
         
-        //draw info
-        if(i){
-            String s2 = "physics time: <" + main.FPS/10 + "ms draw time: <" + 
-                    (int)time + "ms"; 
-            info.setOpaque(false);
-            info.setText(s2 + s);
-            info.paint(g);
-        }else{
-            g.setColor(Color.gray);
-            g.drawString("press I for info", getWidth()-80, 12);
-        }
+        //update info
+        String s2 = "physics time: " + (double)((int)main.FPS)/10 + "ms\ndraw time: " + 
+                (int)time + "ms\n" + s + "\n\nacceleration: " + (double)((int)(main.pred[0].getA()*1000))/1000 +
+                "\ndist from center: " + (double)((int)(main.pred[0].getD()*1000))/1000 + "\n"; 
+        info.setText(s2);
         
         //draw planet
         for(GravityObject go: main.GO){
@@ -88,6 +92,13 @@ public class Draw extends JPanel implements KeyListener{
         }
         
         
+        //draw acceleration vector
+        g.setColor(Color.red);
+        int x = (int)(main.zoom * (main.pred[0].getX()))+getWidth()/2,
+                y = (int)(main.zoom * (main.pred[0].getY()))+getHeight()/2;
+        g.drawLine(x, y, (int)(x + main.zoom * 500 * main.pred[0].xa), (int)(y + main.zoom * 500 * main.pred[0].ya));
+        
+        
         //draw rocket
         double size = main.rocket.getSkin().getWidth();
         AffineTransform tx = AffineTransform.getRotateInstance(main.rocket.getRotRad(), 
@@ -98,23 +109,7 @@ public class Draw extends JPanel implements KeyListener{
                 (int)(main.zoom * (main.pred[0].getX()-size/2))+getWidth()/2,
                 (int)(main.zoom * (main.pred[0].getY()-size/2))+getHeight()/2, null);
         
-        
-        //keyIsPressed functions
-        if(ePr){
-            if(main.dToGo == main.dID)
-                if(main.dToGo < 7.85)
-                    main.dToGo += 0.15;
-                else
-                    main.dToGo = 8;
-        }if(qPr){
-            if(main.dToGo == main.dID)
-                if(main.dToGo > 0.2)
-                    main.dToGo -= 0.15;
-                else
-                    main.dToGo = 0.05;
-            else
-                main.dToGo = main.dID;
-        }if(lPr){
+        if(lPr){
             main.rocket.rot -= 6;
         }if(rPr){
             main.rocket.rot += 6;
@@ -128,9 +123,11 @@ public class Draw extends JPanel implements KeyListener{
         
         //time indicator
         g.setColor(new Color(0, 125, 0));
-        g.drawString("time speed", 5, 12);
-        g.drawRect(5, 15, 72, 5);
-        g.fillRect(5, 15, (int)(main.dID * 9), 5);
+        g.setFont(new Font("Arial", 0, 20));
+        g.drawString("time speed", 30, getHeight() - 45);
+        
+        g.drawRect(20, getHeight() - 40, 120, 20);
+        g.fillRect(20, getHeight() - 40, (int)(main.dID * 15), 20);
         
         //match framerate and wait
         t = System.currentTimeMillis() - lastTime;
@@ -155,6 +152,8 @@ public class Draw extends JPanel implements KeyListener{
         
         lastTime = System.currentTimeMillis();
         
+        super.paint(g);
+        
         repaint();
     }
     
@@ -174,28 +173,24 @@ public class Draw extends JPanel implements KeyListener{
                 rPr = true;
                 break;
             case KeyEvent.VK_E:
-                ePr = true;
+                if(main.dToGo == main.dID)
+                    if(main.dToGo < 7.5)
+                        main.dToGo += 0.5;
+                    else
+                        main.dToGo = 8;
                 break;
             case KeyEvent.VK_Q:
-                qPr = true;
+                
+                //make sure there's no pending acceleration
+                main.dToGo = main.dID;
+                
+                if(main.dToGo > 0.55)
+                    main.dToGo -= 0.5;
+                else
+                    main.dToGo = 0.05;
                 break;
             case KeyEvent.VK_R:
                 main.reset = -1;
-                break;
-            case KeyEvent.VK_1:
-                    main.reset = 1;
-                break;
-            case KeyEvent.VK_2:
-                    main.reset = 2;
-                break;
-            case KeyEvent.VK_3:
-                    main.reset = 3;
-                break;
-            case KeyEvent.VK_4:
-                    main.reset = 4;
-                break;
-            case KeyEvent.VK_5:
-                    main.reset = 5;
                 break;
             case KeyEvent.VK_C:
                 if(e.getKeyChar() == 'C'){
@@ -203,7 +198,7 @@ public class Draw extends JPanel implements KeyListener{
                     if(main.cameraMode == -2)
                         main.cameraMode = main.GONum-1;
                 }else{
-                    main.cameraMode ++;
+                    main.cameraMode++;
                     if(main.cameraMode == main.GONum)
                         main.cameraMode = -1;
                 }
@@ -214,9 +209,6 @@ public class Draw extends JPanel implements KeyListener{
                 break;
             case KeyEvent.VK_PERIOD:
                 dotPr = true;
-                break;
-            case KeyEvent.VK_I:
-                i = !i;
                 break;
             case KeyEvent.VK_ESCAPE:
                 Gravity.fr.dispose();
@@ -238,12 +230,6 @@ public class Draw extends JPanel implements KeyListener{
                 break;
             case KeyEvent.VK_D:
                 rPr = false;
-                break;
-            case KeyEvent.VK_E:
-                ePr = false;
-                break;
-            case KeyEvent.VK_Q:
-                qPr = false;
                 break;
             case KeyEvent.VK_COMMA:
                 commaPr = false;

@@ -10,20 +10,26 @@ public class GravityObject {
         mass = 0;
     }
     
-    public GravityObject(double ix, double iy, double ixs, double iys, double im){
-        x = ix;
-        y = iy;
-        xs = ixs;
-        ys = iys;
-        mass = im;
-        lastx = ix - xs;
-        lasty = iy - ys;
+    public GravityObject(double x, double y, double xs, double ys, double m){
+        this.x = x;
+        this.y = y;
+        this.xs = xs;
+        this.ys = ys;
+        this.mass = m;
+        this.lastx = x - xs;
+        this.lasty = y - ys;
     }
     public int getX(){
         return (int)x;
     }
     public int getY(){
         return (int)y;
+    }
+    public double getA(){
+        return Math.sqrt(xa*xa + ya*ya);
+    }
+    public double getD(){
+        return Math.sqrt(x*x + y*y);
     }
     public void move(double d){
         xs += d * xa;
