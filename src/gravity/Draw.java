@@ -2,31 +2,29 @@ package gravity;
 
 import java.awt.BorderLayout;
 import javax.swing.*;
-import javax.swing.text.*;
 import java.awt.Color;
 import java.awt.Graphics;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.image.AffineTransformOp;
 import java.awt.geom.AffineTransform;
 import java.awt.Font;
 
-public class Draw extends JPanel implements KeyListener{
+public class Draw extends JPanel{
     
-    private boolean rPr, lPr, dotPr, commaPr;
+    boolean rPr, lPr, dotPr, commaPr;
     private long t, lastTime;
     private int framerate = 50, timeCount;
     private double time;
     private final Images image = new Images();
     private final Gravity main;
-    private final JTextPane info = new JTextPane();
+    final JTextPane info = new JTextPane();
     private String s = "\nControls:"
                     + "\nship: A D W"
                     + "\ntime: Q E"
                     + "\ncamera: C"
                     + "\nzoom: < >"
-                    + "\nreset: 1-5"
-                    + "\nthis info: i"
+                    + "\nreset: R"
+                    + "\nmusic: M"
+                    + "\nthis info: I"
                     + "\nexit: esc";
     
     public static String songName;
@@ -34,7 +32,7 @@ public class Draw extends JPanel implements KeyListener{
     
     public Draw(Gravity main){
         this.main = main;
-        addKeyListener(this);
+        addKeyListener(new Actions(this, main));
         lastTime = System.currentTimeMillis();
         
         setOpaque(false);
@@ -144,6 +142,7 @@ public class Draw extends JPanel implements KeyListener{
                 g.drawString(songName, getWidth() - 260, 132 - songNamePhase);
             }else{
                 songName = null;
+                songNamePhase = 0;
             }
             
             songNamePhase++;
@@ -185,93 +184,4 @@ public class Draw extends JPanel implements KeyListener{
     }
     
     
-    @Override
-    public void keyPressed(KeyEvent e){
-        int key = e.getKeyCode();
-        
-        switch(key){
-            case KeyEvent.VK_W:
-                main.rocket.throttle = 1;
-                break;
-            case KeyEvent.VK_A:
-                lPr = true;
-                break;
-            case KeyEvent.VK_D:
-                rPr = true;
-                break;
-            case KeyEvent.VK_E:
-                if(main.dToGo == main.dID)
-                    if(main.dToGo < 7.5)
-                        main.dToGo += 0.5;
-                    else
-                        main.dToGo = 8;
-                break;
-            case KeyEvent.VK_Q:
-                
-                //make sure there's no pending acceleration
-                main.dToGo = main.dID;
-                
-                if(main.dToGo > 0.55)
-                    main.dToGo -= 0.5;
-                else
-                    main.dToGo = 0.05;
-                break;
-            case KeyEvent.VK_R:
-                main.reset = -1;
-                break;
-            case KeyEvent.VK_C:
-                if(e.getKeyChar() == 'C'){
-                    main.cameraMode--;
-                    if(main.cameraMode == -2)
-                        main.cameraMode = main.GONum-1;
-                }else{
-                    main.cameraMode++;
-                    if(main.cameraMode == main.GONum)
-                        main.cameraMode = -1;
-                }
-                    
-                break;
-            case KeyEvent.VK_I:
-                info.setVisible(!info.isVisible());
-                break;
-            case KeyEvent.VK_COMMA:
-                commaPr = true;
-                break;
-            case KeyEvent.VK_PERIOD:
-                dotPr = true;
-                break;
-            case KeyEvent.VK_ESCAPE:
-                Gravity.fr.dispose();
-                Gravity.music.stop();
-                main.loop = false;
-                break;
-        }
-        
-    }
-    
-    @Override
-    public void keyReleased(KeyEvent e){
-        int key = e.getKeyCode();
-        switch(key){
-            case KeyEvent.VK_W:
-                main.rocket.throttle = 0;
-                break;
-            case KeyEvent.VK_A:
-                lPr = false;
-                break;
-            case KeyEvent.VK_D:
-                rPr = false;
-                break;
-            case KeyEvent.VK_COMMA:
-                commaPr = false;
-                break;
-            case KeyEvent.VK_PERIOD:
-                dotPr = false;
-                break;
-        }
-        
-    }
-    
-    @Override
-    public void keyTyped(KeyEvent e){}
 }

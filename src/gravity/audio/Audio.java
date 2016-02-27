@@ -1,7 +1,5 @@
 package gravity.audio;
 
-import java.util.Timer;
-import java.util.TimerTask;
 import java.io.File;
 import javafx.embed.swing.JFXPanel;
 import javafx.scene.media.*;
@@ -14,62 +12,87 @@ import javafx.util.Duration;
 public class Audio extends JFXPanel{
     
     
-    private Media[] songs;
-    private final String[][] songNames = {{"Engel-Endless.mp3", "Kai Engel - Endless Story About Sun And Moon"},
+    private static Media[] songs;
+    private static final String[][] songNames = {{"Engel-Endless.mp3", "Kai Engel - Endless Story About Sun And Moon"},
                                             {"Cheremisinov-Forgotten.mp3", "Sergey Cheremisinov - Forgotten Stars"}};
-    private MediaPlayer mediaPlayer;
-    private int songNum;
+    private static MediaPlayer musicPlayer;
+    private static int songNum;
+    private static boolean musicPlaying = true;
     
+    public static MediaPlayer ROCKET_NOISE;
+            
+            
     public Audio(){
+        ROCKET_NOISE = new MediaPlayer(toMedia("Noise.wav"));
+        ROCKET_NOISE.setStartTime(Duration.millis(300));
+        ROCKET_NOISE.setStopTime(Duration.millis(700));
+        ROCKET_NOISE.setCycleCount(MediaPlayer.INDEFINITE);
+        
         songs = new Media[songNames.length];
         
         songNum = (int)(Math.random() * songNames.length);
         
         for(int i = 0; i < songNames.length; i++){
-            songs[i] = new Media(new File("src/gravity/audio/" + songNames[i][0]).toURI().toString());
+            songs[i] = toMedia(songNames[i][0]);
         }
         
-        scheduleNext();
+        startSong();
         
     }//Music
+    
+    private static Media toMedia(String s){
+        return new Media(new File("src/gravity/audio/" + s).toURI().toString());
+    }//toMedia
+    
+    public static void toggleMusic(){
+        if(musicPlaying)
+            musicPlayer.stop();
+        else{
+            musicPlayer.play();
+            gravity.Draw.songName = songNames[songNum][1];
+        }
+        
+        musicPlaying = !musicPlaying;
+    }//stopMusic
     
     public void stop(){
         
         Timeline timeline = new Timeline();
-            KeyFrame key = new KeyFrame(Duration.millis(1000), new KeyValue (mediaPlayer.volumeProperty(), 0)); 
-            timeline.getKeyFrames().add(key);   
-            timeline.setOnFinished(new EventHandler(){
-                @Override
-                public void handle(Event e){
-                    mediaPlayer.dispose();
-                    Platform.exit();
-                }
-            });
+        KeyFrame key = new KeyFrame(Duration.millis(1000), new KeyValue(musicPlayer.volumeProperty(), 0)); 
+        timeline.getKeyFrames().add(key);   
+        timeline.setOnFinished(new EventHandler(){
+            @Override
+            public void handle(Event e){
+                musicPlayer.dispose();
+                ROCKET_NOISE.dispose();
+                Platform.exit();
+            }
+        });
         timeline.play();
-            
+        
     }//stop
     
-    private void scheduleNext(){
-        new Timer().schedule(new TimerTask(){
-            @Override
-            public void run(){
-                startSong();
-            }
-        }, 2000);
-    }//scheduleNext
     
     
-    private void startSong(){
+    private static void startSong(){
+        
+        
+        musicPlayer = new MediaPlayer(songs[songNum]);
+        
+        try{
+            Thread.sleep(1000);
+        }catch(InterruptedException e){}
+        
         
         gravity.Draw.songName = songNames[songNum][1];
         
-        mediaPlayer = new MediaPlayer(songs[songNum]);
-        mediaPlayer.play();
+        musicPlayer.play();
         
-        mediaPlayer.setOnStopped(new Runnable(){
+        musicPlayer.setOnStopped(new Runnable(){
             @Override
             public void run(){
-                scheduleNext();
+                if(musicPlaying)
+                    startSong();
             }
         });
         

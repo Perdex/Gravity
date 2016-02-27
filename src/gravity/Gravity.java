@@ -13,6 +13,8 @@ public class Gravity extends Thread{
     
     final int predictionLength = 2000, slowDown = 1000, GONum = 5;
     
+    private final double rocketThrottle = 0.02;
+    
     GravityObject[] GO;
     ArrayList<GravityObject> pred = new ArrayList();
     Rocket rocket;
@@ -60,7 +62,7 @@ public class Gravity extends Thread{
     
     static JPanel P;
     static JFrame fr;
-    static gravity.audio.Audio music;
+    static gravity.audio.Audio audio;
     public static void main(String[] args) {
         fr = new JFrame("Gravity");
         Gravity g = new Gravity();
@@ -74,8 +76,8 @@ public class Gravity extends Thread{
         fr.setVisible(true);
         P.setFocusable(true);
         
-        music = new gravity.audio.Audio();
-        fr.add(music);
+        audio = new gravity.audio.Audio();
+        fr.add(audio);
         
     }
     
@@ -110,8 +112,8 @@ public class Gravity extends Thread{
                 }
             }
             
-            pred.get(0).ax += 0.01 * rocket.throttle * Math.sin(rocket.getRotRad());
-            pred.get(0).ay -= 0.01 * rocket.throttle * Math.cos(rocket.getRotRad());
+            pred.get(0).ax += rocketThrottle * rocket.throttle * Math.sin(rocket.getRotRad());
+            pred.get(0).ay -= rocketThrottle * rocket.throttle * Math.cos(rocket.getRotRad());
             
             center();
             
