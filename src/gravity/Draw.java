@@ -13,22 +13,29 @@ import java.awt.Font;
 
 public class Draw extends JPanel implements KeyListener{
     
-    boolean rPr, lPr, dotPr, commaPr;
-    long t, lastTime;
-    int framerate = 50, timeCount;
-    double time;
-    Images image = new Images();
-    Gravity main;
-    JTextPane info = new JTextPane();
-    SimpleAttributeSet atSet;
-    String s = "\nControls:\nship: A D W\ntime: Q E\n" + 
-                "camera: C\nzoom: < >\nreset: 1-5\nexit: esc";
+    private boolean rPr, lPr, dotPr, commaPr;
+    private long t, lastTime;
+    private int framerate = 50, timeCount;
+    private double time;
+    private final Images image = new Images();
+    private final Gravity main;
+    private final JTextPane info = new JTextPane();
+    private String s = "\nControls:"
+                    + "\nship: A D W"
+                    + "\ntime: Q E"
+                    + "\ncamera: C"
+                    + "\nzoom: < >"
+                    + "\nreset: 1-5"
+                    + "\nthis info: i"
+                    + "\nexit: esc";
     
-    public Draw(){
-        main = new Gravity();
+    public static String songName;
+    private int songNamePhase = 0;
+    
+    public Draw(Gravity main){
+        this.main = main;
         addKeyListener(this);
         lastTime = System.currentTimeMillis();
-        main.start();
         
         setOpaque(false);
         setLayout(new BorderLayout());
@@ -67,11 +74,13 @@ public class Draw extends JPanel implements KeyListener{
         g.drawImage(image.BG, (int)main.BGx-1000+getWidth()/2, 
                 (int)main.BGy-500+getHeight()/2, null);
         
+        
         //update info
         String s2 = "physics time: " + (double)((int)main.FPS)/10 + "ms\ndraw time: " + 
-                (int)time + "ms\n" + s + "\n\nacceleration: " + (double)((int)(main.pred[0].getA()*1000))/1000 +
-                "\ndist from center: " + (double)((int)(main.pred[0].getD()*1000))/1000 + "\n"; 
+                (int)time + "ms\n" + s + "\n\nacceleration: " + (double)((int)(main.pred.get(0).getA()*100))/100 +
+                "\ndist from center: " + (int)main.pred.get(0).getD(main.GO[0]) + "\n"; 
         info.setText(s2);
+        
         
         //draw planet
         for(GravityObject go: main.GO){
@@ -84,19 +93,19 @@ public class Draw extends JPanel implements KeyListener{
         
         //draw prediction
         g.setColor(new Color(0, 125, 0));
-        for(int i = 1; i < main.pred.length; i++){
-            g.drawLine((int)(main.zoom * main.pred[i].getX())+getWidth()/2, 
-                    (int)(main.zoom * main.pred[i].getY())+getHeight()/2, 
-                    (int)(main.zoom * main.pred[i-1].getX())+getWidth()/2, 
-                    (int)(main.zoom * main.pred[i-1].getY())+getHeight()/2);
+        for(int i = 1; i < main.pred.size(); i++){
+            g.drawLine((int)(main.zoom * main.pred.get(i).getX())+getWidth()/2, 
+                    (int)(main.zoom * main.pred.get(i).getY())+getHeight()/2, 
+                    (int)(main.zoom * main.pred.get(i-1).getX())+getWidth()/2, 
+                    (int)(main.zoom * main.pred.get(i-1).getY())+getHeight()/2);
         }
         
         
         //draw acceleration vector
         g.setColor(Color.red);
-        int x = (int)(main.zoom * (main.pred[0].getX()))+getWidth()/2,
-                y = (int)(main.zoom * (main.pred[0].getY()))+getHeight()/2;
-        g.drawLine(x, y, (int)(x + main.zoom * 500 * main.pred[0].xa), (int)(y + main.zoom * 500 * main.pred[0].ya));
+        int x = (int)(main.zoom * (main.pred.get(0).getX()))+getWidth()/2,
+                y = (int)(main.zoom * (main.pred.get(0).getY()))+getHeight()/2;
+        g.drawLine(x, y, (int)(x + main.zoom * 500 * main.pred.get(0).ax), (int)(y + main.zoom * 500 * main.pred.get(0).ay));
         
         
         //draw rocket
@@ -106,8 +115,8 @@ public class Draw extends JPanel implements KeyListener{
         tx.scale(0.8*main.zoom, 0.8*main.zoom);
         AffineTransformOp op = new AffineTransformOp(tx, AffineTransformOp.TYPE_BILINEAR);
         g.drawImage(op.filter(main.rocket.getSkin(), null),
-                (int)(main.zoom * (main.pred[0].getX()-size/2))+getWidth()/2,
-                (int)(main.zoom * (main.pred[0].getY()-size/2))+getHeight()/2, null);
+                (int)(main.zoom * (main.pred.get(0).getX()-size/2))+getWidth()/2,
+                (int)(main.zoom * (main.pred.get(0).getY()-size/2))+getHeight()/2, null);
         
         if(lPr){
             main.rocket.rot -= 6;
@@ -121,8 +130,26 @@ public class Draw extends JPanel implements KeyListener{
                 main.zoom *= 0.95;
         }
         
-        //time indicator
+        
         g.setColor(new Color(0, 125, 0));
+        
+        //show songName
+        if(songName != null){
+            
+            if(songNamePhase < 16){
+                g.drawString(songName, getWidth() - 260, songNamePhase);
+            }else if(songNamePhase < 116){
+                g.drawString(songName, getWidth() - 260, 16);
+            }else if(songNamePhase < 132){
+                g.drawString(songName, getWidth() - 260, 132 - songNamePhase);
+            }else{
+                songName = null;
+            }
+            
+            songNamePhase++;
+        }
+        
+        //time indicator
         g.setFont(new Font("Arial", 0, 20));
         g.drawString("time speed", 30, getHeight() - 45);
         
@@ -204,6 +231,9 @@ public class Draw extends JPanel implements KeyListener{
                 }
                     
                 break;
+            case KeyEvent.VK_I:
+                info.setVisible(!info.isVisible());
+                break;
             case KeyEvent.VK_COMMA:
                 commaPr = true;
                 break;
@@ -212,6 +242,7 @@ public class Draw extends JPanel implements KeyListener{
                 break;
             case KeyEvent.VK_ESCAPE:
                 Gravity.fr.dispose();
+                Gravity.music.stop();
                 main.loop = false;
                 break;
         }

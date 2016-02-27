@@ -3,8 +3,8 @@ package gravity;
 
 public class GravityObject {
 
-    public double x = 1, y = 1, xs = 1, ys = 1, xa = 0, 
-            ya = 0, mass, lastx = 1, lasty = 1;
+    public double x = 1, y = 1, vx = 1, vy = 1, ax = 0, 
+            ay = 0, mass;
     
     public GravityObject(){
         mass = 0;
@@ -13,11 +13,9 @@ public class GravityObject {
     public GravityObject(double x, double y, double xs, double ys, double m){
         this.x = x;
         this.y = y;
-        this.xs = xs;
-        this.ys = ys;
+        this.vx = xs;
+        this.vy = ys;
         this.mass = m;
-        this.lastx = x - xs;
-        this.lasty = y - ys;
     }
     public int getX(){
         return (int)x;
@@ -26,20 +24,24 @@ public class GravityObject {
         return (int)y;
     }
     public double getA(){
-        return Math.sqrt(xa*xa + ya*ya);
+        return Math.sqrt(ax*ax + ay*ay);
     }
-    public double getD(){
-        return Math.sqrt(x*x + y*y);
+    public double getV(){
+        return Math.sqrt(vx*vx + vy*vy);
     }
-    public void move(double d){
-        xs += d * xa;
-        ys += d * ya;
+    public double getD(GravityObject g){
+        double dx = g.x - x, dy = g.y - y;
+        return Math.sqrt(dx*dx + dy*dy);
+    }
+    public void move(double t){
+        vx += t * ax;
+        vy += t * ay;
         
-        xa = 0;
-        ya = 0;
+        ax = 0;
+        ay = 0;
         
-        x += d * xs;
-        y += d * ys;
+        x += t * vx;
+        y += t * vy;
     }
     
 }
