@@ -6,12 +6,13 @@ import javax.imageio.ImageIO;
 
 public class Images {
 
-    public BufferedImage BG, planet;
+    public BufferedImage BG, planet, moon;
     
     public Images(){
         try{
             BG = ImageIO.read(getClass().getResource("/images/BG.jpeg"));
-            planet = ImageIO.read(getClass().getResource("/images/PlanetForth.png"));
+            planet = ImageIO.read(getClass().getResource("/images/Planet.png"));
+            moon = ImageIO.read(getClass().getResource("/images/Moon.png"));
         }catch(IOException e){
             System.out.println("images not found");
         }

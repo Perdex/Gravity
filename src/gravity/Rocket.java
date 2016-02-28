@@ -4,13 +4,15 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 
-public class Rocket {
+public class Rocket extends GravityObject{
     
     private BufferedImage skin, skin2;
-    public double rot = 90;
+    public double rot = 90, fuel;
     public int throttle = 0;
+    public boolean thrusting = false;
     
-    public Rocket(){
+    public Rocket(double x, double y, double xs, double ys, double m){
+        super(x, y, xs, ys, m);
         initSkin();
     }
     
@@ -26,10 +28,10 @@ public class Rocket {
     
     
     public BufferedImage getSkin(){
-        if(throttle == 0)
-            return skin;
-        else
+        if(thrusting)
             return skin2;
+        else
+            return skin;
     }
     public double getRotRad(){
         return Math.toRadians(rot);

@@ -86,7 +86,7 @@ public class Audio extends JFXPanel{
         
         gravity.Draw.songName = songNames[songNum][1];
         
-        musicPlayer.play();
+        //musicPlayer.play();
         
         musicPlayer.setOnStopped(new Runnable(){
             @Override

@@ -1,20 +1,19 @@
 package gravity;
 
 import java.util.ArrayList;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.event.*;
 
 import gravity.audio.Audio;
 
-public class Actions implements KeyListener{
+public class Actions implements KeyListener, MouseWheelListener{
     
     private final Draw d;
-    private final Gravity main;
+    private final Gravity g;
     private final ArrayList<Integer> keys;
     
     public Actions(Draw d, Gravity g){
         this.d = d;
-        this.main = g;
+        this.g = g;
         keys = new ArrayList();
     }//Actions
     
@@ -30,8 +29,7 @@ public class Actions implements KeyListener{
         
         switch(e.getKeyCode()){
             case KeyEvent.VK_W:
-                main.rocket.throttle = 1;
-                Audio.ROCKET_NOISE.play();
+                g.rocket.throttle = 1;
                 break;
             case KeyEvent.VK_A:
                 d.lPr = true;
@@ -40,34 +38,34 @@ public class Actions implements KeyListener{
                 d.rPr = true;
                 break;
             case KeyEvent.VK_E:
-                if(main.dToGo == main.dID)
-                    if(main.dToGo < 7.5)
-                        main.dToGo += 0.5;
+                if(g.dToGo == g.dID)
+                    if(g.dToGo < 7.5)
+                        g.dToGo += 0.5;
                     else
-                        main.dToGo = 8;
+                        g.dToGo = 8;
                 break;
             case KeyEvent.VK_Q:
                 
                 //make sure there's no pending acceleration
-                main.dToGo = main.dID;
+                g.dToGo = g.dID;
                 
-                if(main.dToGo > 0.55)
-                    main.dToGo -= 0.5;
+                if(g.dToGo > 0.55)
+                    g.dToGo -= 0.5;
                 else
-                    main.dToGo = 0.05;
+                    g.dToGo = 0.05;
                 break;
             case KeyEvent.VK_R:
-                main.reset = -1;
+                g.reset = -1;
                 break;
             case KeyEvent.VK_C:
                 if(e.getKeyChar() == 'C'){
-                    main.cameraMode--;
-                    if(main.cameraMode == -2)
-                        main.cameraMode = main.GONum-1;
+                    g.cameraMode--;
+                    if(g.cameraMode == -2)
+                        g.cameraMode = g.GONum-1;
                 }else{
-                    main.cameraMode++;
-                    if(main.cameraMode == main.GONum)
-                        main.cameraMode = -1;
+                    g.cameraMode++;
+                    if(g.cameraMode == g.GONum)
+                        g.cameraMode = -1;
                 }
                     
                 break;
@@ -77,16 +75,18 @@ public class Actions implements KeyListener{
             case KeyEvent.VK_M:
                 Audio.toggleMusic();
                 break;
-            case KeyEvent.VK_COMMA:
-                d.commaPr = true;
-                break;
-            case KeyEvent.VK_PERIOD:
-                d.dotPr = true;
-                break;
             case KeyEvent.VK_ESCAPE:
                 Gravity.fr.dispose();
+                
+                while(Gravity.audio == null)
+                    try{Thread.sleep(50);}catch(InterruptedException ex){}
                 Gravity.audio.stop();
-                main.loop = false;
+                
+                g.loop = false;
+                try{
+                    Thread.sleep(1000);
+                }catch(InterruptedException ex){}
+                System.exit(0);
                 break;
         }
         
@@ -100,7 +100,7 @@ public class Actions implements KeyListener{
         
         switch(key){
             case KeyEvent.VK_W:
-                main.rocket.throttle = 0;
+                g.rocket.throttle = 0;
                 Audio.ROCKET_NOISE.stop();
                 break;
             case KeyEvent.VK_A:
@@ -109,15 +109,20 @@ public class Actions implements KeyListener{
             case KeyEvent.VK_D:
                 d.rPr = false;
                 break;
-            case KeyEvent.VK_COMMA:
-                d.commaPr = false;
-                break;
-            case KeyEvent.VK_PERIOD:
-                d.dotPr = false;
-                break;
         }
         
     }
+    
+    @Override
+    public void mouseWheelMoved(MouseWheelEvent e){
+        if(e.getUnitsToScroll() < 0){
+            if(g.zoom < 1.5)
+                g.zoom *= 1.05;
+        }else{
+            if(g.zoom > 0.05)
+                g.zoom *= 0.95;
+        }
+    }//mouseWheelMoved
     
     @Override
     public void keyTyped(KeyEvent e){}
