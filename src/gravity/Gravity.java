@@ -10,21 +10,22 @@ import javafx.scene.media.MediaPlayer;
 public class Gravity extends Thread{
     
     public boolean loop = true;
-    public double FPS = 0, dID, dToGo, BGx, BGy, zoom;
+    public double FPS = 0, BGx, BGy, zoom;
+    public int[] times = new int[]{1, 3, 10, 30, 100, 300, 1000, 5000};
     private long lastTime, t;
-    public int reset = 0, FPSCount = 0, cameraMode = -1;
+    public int reset = 0, FPSCount = 0, cameraMode = -1, dID;
     
-    final int predictionLength = 5000, slowDown = 1000, GONum = 3;
+    final int predictionLength = 8000, GONum = 3;
     
-    private final double rocketThrottle = 0.005, fuelUsage = 0.0015;
+    private final double rocketThrottle = 0.005, fuelUsage = 0.001;
     
     
     GravityObject[] GO, GO2;
-    ArrayList<GravityObject> pred = new ArrayList();
+    ArrayList<GravityObject> pred = new ArrayList<>();
     Rocket rocket;
     
     public double getDTime(){
-        return 0.1 * Math.pow(2, dID);
+        return 0.1 * times[dID];
     }
     
     public Gravity(){
@@ -33,22 +34,21 @@ public class Gravity extends Thread{
     }
     
     private void reset(){
-        pred = new ArrayList();
+        pred = new ArrayList<>();
         
         rocket = new Rocket(1, -1700, 7, 0, 0);
         pred.add(rocket);
         
         BGx = 0;
         BGy = 0;
-        dID = 2;
-        dToGo = 2;
+        dID = 0;
         zoom = 0.5;
         rocket.rot = 90;
         rocket.fuel = 1;
         
         GO = new GravityObject[GONum];
         GO2 = new GravityObject[GONum];
-        int d = 4000, s = 4;
+        double d = 10000, s = 2.8;
         GO[0] = new GravityObject(0, 0, 0, 0, 100000);
         GO2[0] = new GravityObject(0, 0, 0, 0, 100000);
         if(GONum > 1){
@@ -69,7 +69,7 @@ public class Gravity extends Thread{
     static JPanel P;
     static JFrame fr;
     static Audio audio;
-    public static void main(String[] args) {
+    public static void main(String[] args){
         fr = new JFrame("Gravity");
         Gravity g = new Gravity();
         audio = new Audio();
@@ -95,19 +95,15 @@ public class Gravity extends Thread{
                 reset = 0;
             }
             
-            dID = dToGo;
             //go through gravity objects
             for(GravityObject g: GO){
                 
                 //slow down time when near objects
-                double slow = slowDown * pred.get(0).getD(g) / g.mass;
+                double slow = 200 * pred.get(0).getD(g) / g.mass;
                 
-                if(dID > 0)
-                    while(dID > slow)
-                        dID -= 0.5;
-                else
-                    while(dID < slow)
-                        dID += 0.5;
+                while(dID > slow && dID > 0)
+                    dID--;
+                
             }
             
             //move GOs
@@ -118,7 +114,7 @@ public class Gravity extends Thread{
                 }
             }
             
-            if(dID < 3 && rocket.fuel > 0 && rocket.throttle > 0){
+            if(dID < 2 && rocket.fuel > 0 && rocket.throttle > 0){
                 
                 rocket.thrusting = true;
                 
@@ -208,8 +204,8 @@ public class Gravity extends Thread{
     }
     
     private void center(){
-        double toMovex = -pred.get(0).x;
-        double toMovey = -pred.get(0).y;
+        double toMovex = -rocket.x;
+        double toMovey = -rocket.y;
         if(cameraMode >= 0){
             toMovex = -GO[cameraMode].x;
             toMovey = -GO[cameraMode].y;
@@ -223,8 +219,8 @@ public class Gravity extends Thread{
             o.x += toMovex;
             o.y += toMovey;
         }
-        BGx += (double)(toMovex / 20);
-        BGy += (double)(toMovey / 20);
+        BGx += (double)(toMovex / 300);
+        BGy += (double)(toMovey / 300);
     }
     
 }

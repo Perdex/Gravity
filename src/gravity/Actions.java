@@ -14,7 +14,7 @@ public class Actions implements KeyListener, MouseWheelListener{
     public Actions(Draw d, Gravity g){
         this.d = d;
         this.g = g;
-        keys = new ArrayList();
+        keys = new ArrayList<>();
     }//Actions
     
     @Override
@@ -38,21 +38,12 @@ public class Actions implements KeyListener, MouseWheelListener{
                 d.rPr = true;
                 break;
             case KeyEvent.VK_E:
-                if(g.dToGo == g.dID)
-                    if(g.dToGo < 7.5)
-                        g.dToGo += 0.5;
-                    else
-                        g.dToGo = 8;
+                if(g.dID < g.times.length - 1)
+                    g.dID++;
                 break;
             case KeyEvent.VK_Q:
-                
-                //make sure there's no pending acceleration
-                g.dToGo = g.dID;
-                
-                if(g.dToGo > 0.55)
-                    g.dToGo -= 0.5;
-                else
-                    g.dToGo = 0.05;
+                if(g.dID > 0)
+                    g.dID--;
                 break;
             case KeyEvent.VK_R:
                 g.reset = -1;
@@ -116,10 +107,10 @@ public class Actions implements KeyListener, MouseWheelListener{
     @Override
     public void mouseWheelMoved(MouseWheelEvent e){
         if(e.getUnitsToScroll() < 0){
-            if(g.zoom < 1.5)
+            if(g.zoom < 1)
                 g.zoom *= 1.05;
         }else{
-            if(g.zoom > 0.05)
+            if(g.zoom > 0.02)
                 g.zoom *= 0.95;
         }
     }//mouseWheelMoved

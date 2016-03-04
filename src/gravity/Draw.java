@@ -19,7 +19,8 @@ public class Draw extends JPanel{
     private final Gravity main;
     final JTextPane info = new JTextPane();
     private String s = "\nControls:"
-                    + "\nship: A D W"
+                    + "\nship throttle: W (1x or 3x time acc)"
+                    + "\nturn ship: A D"
                     + "\ntime: Q E"
                     + "\ncamera: C"
                     + "\nzoom: mouse wheel"
@@ -59,17 +60,23 @@ public class Draw extends JPanel{
         g.setColor(Color.black);
         g.fillRect(0, 0, getWidth(), getHeight());
         
-        int bgx = (int)main.BGx, bgy = (int)main.BGy,
-                offsetX = (int)((bgx + 500) / 1000) * 1000, offsetY = (int)((bgy + 500) / 1000) * 1000;
+        double bgx = main.BGx % 1000,
+            bgy = main.BGy % 1000;
+        
+        if(bgx > 0)
+            bgx -= 1000;
+        if(bgy > 0)
+            bgy -= 1000;
+        
+        bgx += getWidth() / 2;
+        bgy += getHeight() / 2;
+        
         for(int i = -1; i <= 1; i++){
             for(int j = -1; j <= 1; j++){
                 
-                int x1 = 1000 * i + bgx-500 + getWidth()/2 - offsetX,
-                        y1 = 1000 * j + bgy-500 + getHeight()/2 - offsetY;
+                int x = (int)(1000 * i + bgx), y = (int)(1000 * j + bgy);
                 
-                //only draw if window contains one of the corners
-                if(contains(x1, y1) || contains(x1, y1 + 1000) || contains(x1 + 1000, y1) || contains(x1 + 1000, y1 + 1000))
-                    g.drawImage(image.BG, x1, y1, null);
+                g.drawImage(image.BG, x, y, null);
             }
         }
         
@@ -166,10 +173,8 @@ public class Draw extends JPanel{
         g.setColor(new Color(0, 125, 0));
         //time indicator
         g.setFont(new Font("Arial", 0, 20));
-        g.drawString("time speed: " + (double)((int)(main.getDTime() * 10)) / 10, 30, getHeight() - 45);
+        g.drawString("time acceleration: " + (int)(main.getDTime() * 10) + "x", 10, getHeight() - 10);
         
-        g.drawRect(20, getHeight() - 40, 120, 20);
-        g.fillRect(20, getHeight() - 40, (int)(main.dID * 15), 20);
         
         //match framerate and wait
         t = System.currentTimeMillis() - lastTime;
