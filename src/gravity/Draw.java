@@ -25,7 +25,7 @@ public class Draw extends JPanel{
                     + "\ncamera: C"
                     + "\nzoom: mouse wheel"
                     + "\nreset: R"
-                    //+ "\nmusic: M"
+                    + "\nmusic: M"
                     + "\nthis info: I"
                     + "\nexit: esc";
     
@@ -113,7 +113,7 @@ public class Draw extends JPanel{
                     (int)(main.zoom * main.pred.get(i-1).getY())+getHeight()/2);
         }
         
-        /*
+        
         //show songName
         if(songName != null){
             
@@ -130,7 +130,7 @@ public class Draw extends JPanel{
             
             songNamePhase++;
         }
-        */
+        
         
         //draw fuel: text
         g.setFont(new Font("Arial", 0, 20));

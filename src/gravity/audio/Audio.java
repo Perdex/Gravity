@@ -37,7 +37,7 @@ public class Audio extends JFXPanel{
             songs[i] = toMedia(songNames[i][0]);
         }
         
-        //startSong();
+        startSong();
         
     }//Audio
     
@@ -50,7 +50,7 @@ public class Audio extends JFXPanel{
     }//toMedia
     
     public static void toggleMusic(){
-        /*
+        
         if(musicPlaying)
             musicPlayer.stop();
         else{
@@ -59,11 +59,11 @@ public class Audio extends JFXPanel{
         }
         
         musicPlaying = !musicPlaying;
-        */
+        
     }//toggleMusic
     
     public void stop(){
-        /*
+        
         Timeline timeline = new Timeline();
         KeyFrame key = new KeyFrame(Duration.millis(1000), new KeyValue(musicPlayer.volumeProperty(), 0)); 
         timeline.getKeyFrames().add(key);   
@@ -76,7 +76,7 @@ public class Audio extends JFXPanel{
             }
         });
         timeline.play();
-        */
+        
         ROCKET_NOISE.dispose();
     }//stop
     
