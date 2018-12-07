@@ -46,14 +46,13 @@ public class GravityObject {
         return (int)y;
     }
     public double getA(){
-        return Math.sqrt(lastax*lastax + lastay*lastay);
+        return Math.hypot(lastax, lastay);
     }
     public double getV(){
-        return Math.sqrt(vx*vx + vy*vy);
+        return Math.hypot(vx, vy);
     }
     public double getD(GravityObject g){
-        double dx = g.x - x, dy = g.y - y;
-        return Math.sqrt(dx*dx + dy*dy);
+        return Math.hypot(g.x - x, g.y - y);
     }
     public void move(double t){
         vx += t * ax;

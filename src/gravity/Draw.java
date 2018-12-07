@@ -13,7 +13,7 @@ public class Draw extends JPanel{
     
     boolean rPr, lPr;
     private long t, lastTime;
-    private int framerate = 50, timeCount;
+    private int framerate = 50;
     private double time;
     private final Images image = new Images();
     private final Gravity main;
@@ -25,7 +25,7 @@ public class Draw extends JPanel{
                     + "\ncamera: C"
                     + "\nzoom: mouse wheel"
                     + "\nreset: R"
-                    + "\nmusic: M"
+                    //+ "\nmusic: M"
                     + "\nthis info: I"
                     + "\nexit: esc";
     
@@ -71,7 +71,7 @@ public class Draw extends JPanel{
         bgx += getWidth() / 2;
         bgy += getHeight() / 2;
         
-        for(int i = -1; i <= 1; i++){
+        for(int i = -2; i <= 2; i++){
             for(int j = -1; j <= 1; j++){
                 
                 int x = (int)(1000 * i + bgx), y = (int)(1000 * j + bgy);
@@ -113,7 +113,7 @@ public class Draw extends JPanel{
                     (int)(main.zoom * main.pred.get(i-1).getY())+getHeight()/2);
         }
         
-        
+        /*
         //show songName
         if(songName != null){
             
@@ -130,7 +130,7 @@ public class Draw extends JPanel{
             
             songNamePhase++;
         }
-        
+        */
         
         //draw fuel: text
         g.setFont(new Font("Arial", 0, 20));
@@ -161,6 +161,13 @@ public class Draw extends JPanel{
                 (int)(main.zoom * (main.rocket.getX()-size/2))+getWidth()/2,
                 (int)(main.zoom * (main.rocket.getY()-size/2))+getHeight()/2, null);
         
+        //draw rocket to corner
+        size = main.rocket.getSkin().getWidth();
+        tx = AffineTransform.getRotateInstance(main.rocket.getRotRad(),  size / 2, size / 2);
+        
+        op = new AffineTransformOp(tx, AffineTransformOp.TYPE_BILINEAR);
+        g.drawImage(op.filter(main.rocket.getSkin(), null), getWidth() - 120, getHeight() - 80, null);
+        
         //key functions: rotate rocket and zoom in/out
         if(lPr){
             main.rocket.rot -= 6;
@@ -179,15 +186,8 @@ public class Draw extends JPanel{
         //match framerate and wait
         t = System.currentTimeMillis() - lastTime;
         
-        if(timeCount > 50){
-            time -= time/2;
-        }
-        if(t > time){
-            time = t;
-            timeCount = 0;
-        }else{
-            timeCount++;
-        }
+        time *= 0.95;
+        time += 0.05 * t;
         
         long toWait = 30 - t;
         if(toWait > 0)

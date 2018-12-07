@@ -6,6 +6,7 @@ import java.util.ArrayList;
 
 import gravity.audio.Audio;
 import javafx.scene.media.MediaPlayer;
+import javax.swing.JOptionPane;
 
 public class Gravity extends Thread{
     
@@ -13,11 +14,11 @@ public class Gravity extends Thread{
     public double FPS = 0, BGx, BGy, zoom;
     public int[] times = new int[]{1, 3, 10, 30, 100, 300, 1000, 5000};
     private long lastTime, t;
-    public int reset = 0, FPSCount = 0, cameraMode = -1, dID;
+    public int reset = 0, cameraMode = -1, dID;
     
-    final int predictionLength = 8000, GONum = 3;
+    final int predictionLength = 1000, GONum = 2;
     
-    private final double rocketThrottle = 0.005, fuelUsage = 0.001;
+    private final double rocketThrottle = 0.05, fuelUsage = 0.001;
     
     
     GravityObject[] GO, GO2;
@@ -36,12 +37,12 @@ public class Gravity extends Thread{
     private void reset(){
         pred = new ArrayList<>();
         
-        rocket = new Rocket(1, -1700, 7, 0, 0);
+        rocket = new Rocket(1, -1700, 8, 0, 0);
         pred.add(rocket);
         
         BGx = 0;
         BGy = 0;
-        dID = 0;
+        dID = 1;
         zoom = 0.5;
         rocket.rot = 90;
         rocket.fuel = 1;
@@ -70,20 +71,25 @@ public class Gravity extends Thread{
     static JFrame fr;
     static Audio audio;
     public static void main(String[] args){
-        fr = new JFrame("Gravity");
-        Gravity g = new Gravity();
-        audio = new Audio();
-        P = new Draw(g);
-        g.start();
         
-        fr.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        fr.setUndecorated(true);
-        fr.setExtendedState(JFrame.MAXIMIZED_BOTH);
-        fr.add(audio);
-        fr.add(P);
-        fr.setVisible(true);
-        P.setFocusable(true);
-        
+        try{
+            fr = new JFrame("Gravity");
+            Gravity g = new Gravity();
+            audio = new Audio();
+            P = new Draw(g);
+            g.start();
+
+            fr.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            fr.setUndecorated(true);
+            fr.setExtendedState(JFrame.MAXIMIZED_BOTH);
+            fr.add(audio);
+            fr.add(P);
+            fr.setVisible(true);
+            P.setFocusable(true);
+        }catch(Exception e){
+            JOptionPane.showMessageDialog(null, "There was an error at init:\n" + e);
+            System.exit(0);
+        }
         
     }
     
@@ -140,17 +146,10 @@ public class Gravity extends Thread{
             //time
             t = System.nanoTime() - lastTime;
             
-            if(FPSCount > 50){
-                FPS -= (int)FPS/2;
-            }
-            if(t/100000 > FPS){
-                FPS = t/100000;
-                FPSCount = 0;
-            }else{
-                FPSCount++;
-            }
+            FPS *= 0.95;
+            FPS = 0.05 * t/100000;
             
-            long toWait = 10000000 - t;
+            long toWait = 10 * 1000000 - t;
             if(toWait > 0)
                 try{
                     Thread.sleep(toWait/1000000);
@@ -172,7 +171,7 @@ public class Gravity extends Thread{
         
         GravityObject.copy(GO, GO2);
         
-        ArrayList<GravityObject> pred2 = new ArrayList();
+        ArrayList<GravityObject> pred2 = new ArrayList<>();
         pred2.add(rocket);
 
         for(int i = 1; i < predictionLength / time; i++){
@@ -188,7 +187,7 @@ public class Gravity extends Thread{
                 fall(pred2.get(i), go);
             }
             
-            pred2.get(i).move(time);
+            pred2.get(i).move(time*2);
         }
         pred = pred2;
         
@@ -196,10 +195,12 @@ public class Gravity extends Thread{
     
     public static void fall(GravityObject g, GravityObject g2){
         double dx = g2.x - g.x, dy = g2.y - g.y;
-        double a = g2.mass / (Math.pow(dx, 2) + Math.pow(dy, 2));
+        double a = g2.mass / (dx * dx + dy * dy);
         
-        g.ax += a * (double)(dx / (Math.abs(dx) + Math.abs(dy)));
-        g.ay += a * (double)(dy / (Math.abs(dx) + Math.abs(dy)));
+        double dist = Math.hypot(dx, dy);
+        
+        g.ax += a * dx / dist;
+        g.ay += a * dy / dist;
         
     }
     

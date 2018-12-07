@@ -1,6 +1,7 @@
 package gravity.audio;
 
 import java.io.File;
+import java.net.URISyntaxException;
 import javafx.embed.swing.JFXPanel;
 import javafx.scene.media.*;
 import javafx.animation.*;
@@ -36,15 +37,20 @@ public class Audio extends JFXPanel{
             songs[i] = toMedia(songNames[i][0]);
         }
         
-        startSong();
+        //startSong();
         
-    }//Music
+    }//Audio
     
-    private static Media toMedia(String s){
-        return new Media(new File("src/gravity/audio/" + s).toURI().toString());
+    private Media toMedia(String s){
+        try{
+            return new Media(getClass().getResource(s).toURI().toString());
+        }catch(URISyntaxException e){
+            return null;
+        }
     }//toMedia
     
     public static void toggleMusic(){
+        /*
         if(musicPlaying)
             musicPlayer.stop();
         else{
@@ -53,10 +59,11 @@ public class Audio extends JFXPanel{
         }
         
         musicPlaying = !musicPlaying;
-    }//stopMusic
+        */
+    }//toggleMusic
     
     public void stop(){
-        
+        /*
         Timeline timeline = new Timeline();
         KeyFrame key = new KeyFrame(Duration.millis(1000), new KeyValue(musicPlayer.volumeProperty(), 0)); 
         timeline.getKeyFrames().add(key);   
@@ -69,7 +76,8 @@ public class Audio extends JFXPanel{
             }
         });
         timeline.play();
-        
+        */
+        ROCKET_NOISE.dispose();
     }//stop
     
     
